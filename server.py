@@ -42,12 +42,14 @@ def chat_server():
                             broadcast(sock,serversocket,data)
                         # send the data to all users
                     else:
+                        data = str(address) + ' went offline'
                         SOCKET_LIST.remove(sock)
-                        broadcast(sock, serversocket, address+' went offline')
+                        broadcast(sock, serversocket, data)
 
                         # print to all that user is offline
                 except:
-                    broadcast(sock, serversocket, address+' went offline')
+                    data=str(address)+' went offline'
+                    broadcast(sock, serversocket,data)
                     # print to all that user is offline
                     continue
     serversocket.close()
