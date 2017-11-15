@@ -7,8 +7,8 @@ import input_thread
 def chat_client():
 
     s=socket.socket()
-
-    host='77.125.24.140'
+    # '77.125.7.67'
+    host=socket.gethostname()
     port=9999
     server_address=(host,port)
 

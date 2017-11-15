@@ -55,7 +55,7 @@ while run==True:
     while read_queue.empty()==False:
         message=read_queue.get()
         print('\x1b[2K\r' + message, end='\n')
-    print('\r<'+user+'>: ' + new_output, end='')
+        print('\r<'+user+'>: ' + new_output, end='')
     # else:
     #     try:
     #         data=s.recv(1024)

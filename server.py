@@ -62,7 +62,7 @@ def chat_server():
                             print(data.decode())
 
                             data = data.decode()
-                            if data=='*4*quit':
+                            if data[-4:]=='quit':
                                 data=('['+users_dict[sock.getpeername()]+' left the chat]').encode()
                                 SOCKET_LIST.remove(sock)
                                 sock.close()

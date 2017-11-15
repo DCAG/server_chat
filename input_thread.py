@@ -3,8 +3,9 @@ from queue import Queue
 import time
 import msvcrt
 
-
 getch=msvcrt.getch
+getwch=msvcrt.getwch
+
 send_queue=Queue()
 read_queue_buffer=Queue()
 read_queue=Queue()
@@ -55,8 +56,7 @@ class InputThread(threading.Thread):
 
                 letter=''
             else:
-                letter=letter.decode()
-
+                letter=letter.decode("utf-8", "ignore")
             if letter == '\r':
                 if len(self.sentence)>0:
                     temp=''.join(self.sentence)
@@ -146,8 +146,3 @@ def read(s):
             # print(e)
             if stop_threads.empty()!=True:
                 break
-            continue
-        time.sleep(0.1)
-
-    quit()
-
