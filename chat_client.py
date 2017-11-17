@@ -1,14 +1,10 @@
 import socket
-import select
-import sys
-import threading
-import input_thread
 
 def chat_client():
 
     s=socket.socket()
     # '77.125.7.67s'
-    host=socket.gethostname()
+    host='77.125.7.67'
     port=9999
     server_address=(host,port)
 

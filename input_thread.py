@@ -140,7 +140,9 @@ def read(s):
 
                 # read_queue.put(data.decode())
             else:
-                print('\n<-disconnected from server->')
+                print('\n<-Cant reach server->',end='')
+                read_queue.put('')
+                # time.sleep(5)
                 break
         except Exception as e:
             # print(e)

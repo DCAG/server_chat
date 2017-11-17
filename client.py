@@ -1,32 +1,53 @@
-import time,sys
+import time
 import threading
-from queue import Queue
-import msvcrt
 import os
 from input_thread import InputThread, read_queue, send_queue,read,stop_threads
-from logging import debug
 from chat_client import chat_client
+import winsound
+import win32gui
+
+
+this_window=win32gui.GetForegroundWindow()
+
+def play_sound(filename):
+
+    filepath=os.path.join(BASE_DIR,filename)
+    os.system('powershell -c (New-Object Media.SoundPlayer '+filepath+').PlaySync();')
+
+
+
+def is_window_focused(this_window):
+    f = win32gui.GetForegroundWindow()
+    if f == this_window:
+        return True
+    if f != this_window:
+        return False
+
 
 os.system('cls')
 
+BASE_DIR = (os.path.dirname(os.path.abspath(__file__)))
+
+
 s=chat_client()
 
-print ('connected to '+str(s.getpeername())+'\n')
+print ('Connected to '+str(s.getpeername())+'')
 
-
+print('<<-To exit type: quit->>\n')
 
 user=input('<-How do I call you?->\n<?>: ')
 user=user.title()
 
 print('\033[F]\033[F]\x1b[2K\r'+'<-How do I call you?->{-Fine-}', end='\n')
 print('\x1b[2K\r<'+user+'>: ', end='')
+
 s.sendall(user.encode())
 
 input_t=InputThread()
 input_t.start()
 
 new_output=input_t.sentence
-cur_output=[]
+cur_output_length=0
 
 
 # print('\rMe: ',end='')
@@ -36,6 +57,7 @@ count = 0
 read_t=threading.Thread(target=read,name='thread t',args=(s,))
 read_t.start()
 
+notified=False
 while run==True:
     new_output=''.join(input_t.sentence)
 
@@ -44,7 +66,10 @@ while run==True:
         # print('\n'+message)
         length=len(message)
         mess=('*'+str(length)+'*'+message).encode()
-        s.sendall(mess)
+        try:
+            s.sendall(mess)
+        except:
+            print('\n<-Cant reach server->',end='')
 
         if message=='quit':
 
@@ -56,6 +81,12 @@ while run==True:
         message=read_queue.get()
         print('\x1b[2K\r' + message, end='\n')
         print('\r<'+user+'>: ' + new_output, end='')
+        if is_window_focused(this_window):
+            notified=False
+            # play_sound('DragonBallImpact.wav')
+        elif notified==False:
+            play_sound('DonorCardAppears.wav')
+            notified=True
     # else:
     #     try:
     #         data=s.recv(1024)
@@ -63,30 +94,41 @@ while run==True:
     #     except:
     #         continue
 
-    if len(cur_output)==len(new_output):
+    if cur_output_length==len(new_output):
         time.sleep(0.01)
         pass
     else:
-        print('\r<'+user+'>: '+new_output,end='')
-        if len(cur_output)>len(new_output):
+        # print('\r<'+user+'>: '+new_output,end='')
+        # cur_output_length > len(new_output)
+        # print(str(cur_output_length)+' '+str(len(new_output)))
+        #
+        # if ((cur_output_length)<(len(new_output))):
+        #     print('fucking Heeeeellll')
+
+        if cur_output_length>len(new_output):
 
             # after the input thread gets a valid \n, it self pauses
             # in order to let the main use \n to go down a line while keeping in sync with server messages
             if input_t.finished_sentence==True:
                 print('\n' + '\r<'+user+'>: ' + (new_output), end='')
-                cur_output=[]
+                cur_output_length=0
                 input_t.resume()
 
             else:
                 print('\x1b[2K\r' + '\r<'+user+'>: ' + (new_output), end='')
-                cur_output=[]
-        else:
-            cur_output.append(0)
+                cur_output_length=len(new_output)
+
+        elif cur_output_length<len(new_output):
+            print(new_output[cur_output_length:],flush=True,end='')
+            cur_output_length = len(new_output)
 s.close()
+
 
 print('\n<-Quit successful->\n')
 
 print('<-A Chat->')
 print('<-Made by <<Or S>>->')
+
+time.sleep(2)
 
 quit()

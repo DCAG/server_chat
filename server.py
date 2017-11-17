@@ -18,6 +18,13 @@ leftovers=[]
 def get_message(data):
     pass
 
+def construct_message(user,data):
+
+    output = [user, str(len(data)), data]
+
+    data = '*'.join(output)
+    return data
+
 
 def chat_server():
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -54,38 +61,58 @@ def chat_server():
                         #
                         if sock.getpeername() not in users_dict:
                             users_dict[sock.getpeername()]=(data.decode()).title()
-                            data = ('[' + users_dict[sock.getpeername()] + ' joined the chat]').encode()
-                            broadcast(sock, serversocket, data)
+
+                            data=' joined the chat]'
+                            user='[' + users_dict[sock.getpeername()].title()
+
+                            data=construct_message(user,data)
+
+                            # data = (user+'*'+length+'*'+data).encode()
+                            broadcast(sock, serversocket, data.encode())
 
 
                         else:
                             print(data.decode())
 
                             data = data.decode()
-                            if data[-4:]=='quit':
-                                data=('['+users_dict[sock.getpeername()]+' left the chat]').encode()
+                            if data[-6:]=='4*quit':
+                                data=(' left the chat]')
+                                user = '[' + users_dict[sock.getpeername()].title()
+
+                                data=construct_message(user, data)
+
                                 SOCKET_LIST.remove(sock)
                                 sock.close()
-                                broadcast(sock, serversocket, data)
+                                broadcast(sock, serversocket, data.encode())
                             else:
+
                                 data=('<'+users_dict[sock.getpeername()]+'>: '+data).encode()
                                 broadcast(sock,serversocket,data)
 
                             # send the data to all users
                     else:
-                        data = ('['+users_dict[sock.getpeername()] + ' went offline]').encode()
+                        data = (' went offline]')
+                        user = '[' + users_dict[sock.getpeername()].title()
+
+                        data = construct_message(user, data)
+
                         print('no data')
                         if sock in SOCKET_LIST:
                             SOCKET_LIST.remove(sock)
-                        broadcast(sock, serversocket, data)
+                        broadcast(sock, serversocket, data.encode())
 
                         # print to all that user is offline
                 except Exception as e:
                     print(e)
-                    print(sock)
+                    # print(sock)
                     print('im in except with: '+users_dict[sock.getpeername()])
-                    data=(users_dict[sock.getpeername()]+' went offline').encode()
-                    broadcast(sock, serversocket,data)
+
+                    data = (' went offline]')
+                    user = '[' + users_dict[sock.getpeername()].title()
+
+                    data = construct_message(user, data)
+
+                    broadcast(sock, serversocket,data.encode())
                     # if sock in ready_to_read:
                     #     ready_to_read.remove(sock)
                     sock.close()
