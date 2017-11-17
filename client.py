@@ -1,22 +1,33 @@
 import time
 import threading
 import os
+import platform
 from input_thread import InputThread, read_queue, send_queue,read,stop_threads
 from chat_client import chat_client
-import winsound
-import win32gui
 
 
-this_window=win32gui.GetForegroundWindow()
+os_type = platform.system()
+
+if os_type == 'Linux':
+    clearscreen_command = 'clear'
+elif os_type == 'windows':
+    import winsound
+    import win32gui
+    clearscreen_command = 'cls'
+    this_window=win32gui.GetForegroundWindow()
 
 def play_sound(filename):
-
+    if not os_type == 'windows':
+        return False
+    
     filepath=os.path.join(BASE_DIR,filename)
     os.system('powershell -c (New-Object Media.SoundPlayer '+filepath+').PlaySync();')
 
 
 
 def is_window_focused(this_window):
+    if not os_type == 'windows':
+        return False
     f = win32gui.GetForegroundWindow()
     if f == this_window:
         return True
@@ -24,7 +35,7 @@ def is_window_focused(this_window):
         return False
 
 
-os.system('cls')
+os.system(str(clearscreen_command))
 
 BASE_DIR = (os.path.dirname(os.path.abspath(__file__)))
 
@@ -81,12 +92,13 @@ while run==True:
         message=read_queue.get()
         print('\x1b[2K\r' + message, end='\n')
         print('\r<'+user+'>: ' + new_output, end='')
-        if is_window_focused(this_window):
-            notified=False
-            # play_sound('DragonBallImpact.wav')
-        elif notified==False:
-            play_sound('DonorCardAppears.wav')
-            notified=True
+        if os_type == 'windows':
+            if is_window_focused(this_window):
+                notified=False
+                # play_sound('DragonBallImpact.wav')
+            elif notified==False:
+                play_sound('DonorCardAppears.wav')
+                notified=True
     # else:
     #     try:
     #         data=s.recv(1024)

@@ -1,10 +1,17 @@
 import threading
 from queue import Queue
 import time
-import msvcrt
+import platform
+if platform.system() == 'Linux':
+    import getch as ugetch
+    LINE_ENDING = '\n'
+elif platform.system() == 'windows':
+    import msvcrt as ugetch
+    LINE_ENDING = '\r'    
 
-getch=msvcrt.getch
-getwch=msvcrt.getwch
+os_type = platform.system()
+getch=ugetch.getch
+#getwch=ugetch.getwch
 
 send_queue=Queue()
 read_queue_buffer=Queue()
@@ -38,7 +45,8 @@ class InputThread(threading.Thread):
             # checks for arrow keys - need to call getch twice otherwise --- crush
             if letter==b'\xe0':
                 letter=getch()
-                letter=letter.decode()
+                if os_type == 'windows':
+                    letter=letter.decode()
 
                 # placeholders for arrow keys functionality
                 if letter=='K':
@@ -56,8 +64,9 @@ class InputThread(threading.Thread):
 
                 letter=''
             else:
-                letter=letter.decode("utf-8", "ignore")
-            if letter == '\r':
+                if os_type == 'windows':
+                    letter=letter.decode("utf-8", "ignore")
+            if letter == LINE_ENDING:
                 if len(self.sentence)>0:
                     temp=''.join(self.sentence)
                     send_queue.put(temp)
