@@ -1,4 +1,4 @@
-import time
+import time,datetime
 import threading
 import os
 import platform
@@ -10,14 +10,21 @@ os_type = platform.system()
 
 if os_type == 'Linux':
     clearscreen_command = 'clear'
-elif os_type == 'windows':
+elif os_type == 'Windows':
     import winsound
     import win32gui
     clearscreen_command = 'cls'
     this_window=win32gui.GetForegroundWindow()
+else:
+    print('this is the system platform.system found'+os_type)
+    print('error: cannot figure out what system youre using')
+    print('exiting program')
+    clearscreen_command=''
+    stop_threads.put(True)
+    quit()
 
 def play_sound(filename):
-    if not os_type == 'windows':
+    if not os_type == 'Windows':
         return False
     
     filepath=os.path.join(BASE_DIR,filename)
@@ -26,7 +33,7 @@ def play_sound(filename):
 
 
 def is_window_focused(this_window):
-    if not os_type == 'windows':
+    if not os_type == 'Windows':
         return False
     f = win32gui.GetForegroundWindow()
     if f == this_window:
@@ -69,9 +76,11 @@ read_t=threading.Thread(target=read,name='thread t',args=(s,))
 read_t.start()
 
 notified=False
+notify_timer=0
 while run==True:
     new_output=''.join(input_t.sentence)
-
+    if len(new_output)!=0:
+        cur_output=new_output
     if send_queue.empty()==False:
         message=send_queue.get()
         # print('\n'+message)
@@ -89,16 +98,22 @@ while run==True:
             run=False
             break
     while read_queue.empty()==False:
+        # now=' -'+now
+        # now=now.join(['<','>'])
+        # print('<-' + str(now.hour) + ':' + str(now.minute) + '->')
         message=read_queue.get()
-        print('\x1b[2K\r' + message, end='\n')
+        print('\x1b[2K\r'+ message, end='\n')
         print('\r<'+user+'>: ' + new_output, end='')
-        if os_type == 'windows':
+        if os_type == 'Windows':
             if is_window_focused(this_window):
                 notified=False
                 # play_sound('DragonBallImpact.wav')
             elif notified==False:
                 play_sound('DonorCardAppears.wav')
+                notify_timer=time.time()
                 notified=True
+            elif notify_timer+60>time.time():
+                notified=False
     # else:
     #     try:
     #         data=s.recv(1024)
@@ -122,13 +137,24 @@ while run==True:
             # after the input thread gets a valid \n, it self pauses
             # in order to let the main use \n to go down a line while keeping in sync with server messages
             if input_t.finished_sentence==True:
+                while cur_output_length>0:
+                    print('\b',end='')
+                    cur_output_length-=1
+
+                now = datetime.datetime.now()
+                now = ':'.join([str(now.hour), str(now.minute)])
+                now = now.join(['|','|'])
+                print('\r'+now+'<' + user + '>: ' + cur_output, end='')
+
                 print('\n' + '\r<'+user+'>: ' + (new_output), end='')
                 cur_output_length=0
                 input_t.resume()
 
             else:
-                print('\x1b[2K\r' + '\r<'+user+'>: ' + (new_output), end='')
-                cur_output_length=len(new_output)
+                while cur_output_length>len(new_output):
+                    print('\b \b',flush=True,end='')
+                # print('\x1b[2K\r' + '\r<'+user+'>: ' + (new_output), end='')
+                    cur_output_length-=1
 
         elif cur_output_length<len(new_output):
             print(new_output[cur_output_length:],flush=True,end='')

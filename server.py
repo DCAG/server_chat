@@ -1,10 +1,25 @@
 import sys
 import socket
 import select
-import time
+import datetime
 
 
+def curr_time():
+    now = datetime.datetime.now()
+    minute=now.minute
+    hour=now.hour
+    if len(str(minute))<2:
+        minute='0'+str(minute)
+    else:
+        minute=str(minute)
+    if len(str(hour))<2:
+        hour='0'+str(hour)
+    else:
+        hour=str(hour)
 
+    now = ':'.join([hour, minute])
+    now = now.join(['|', '|'])
+    return now
 
 host=''
 
@@ -19,8 +34,8 @@ def get_message(data):
     pass
 
 def construct_message(user,data):
-
-    output = [user, str(len(data)), data]
+    now=curr_time()
+    output = [now, user, str(len(data)), data]
 
     data = '*'.join(output)
     return data
@@ -86,7 +101,7 @@ def chat_server():
                                 broadcast(sock, serversocket, data.encode())
                             else:
 
-                                data=('<'+users_dict[sock.getpeername()]+'>: '+data).encode()
+                                data=(curr_time()+'*'+'<'+users_dict[sock.getpeername()]+'>: '+data).encode()
                                 broadcast(sock,serversocket,data)
 
                             # send the data to all users

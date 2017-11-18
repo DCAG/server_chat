@@ -5,7 +5,7 @@ import platform
 if platform.system() == 'Linux':
     import getch as ugetch
     LINE_ENDING = '\n'
-elif platform.system() == 'windows':
+elif platform.system() == 'Windows':
     import msvcrt as ugetch
     LINE_ENDING = '\r'    
 
@@ -64,7 +64,7 @@ class InputThread(threading.Thread):
 
                 letter=''
             else:
-                if os_type == 'windows':
+                if os_type == 'Windows':
                     letter=letter.decode("utf-8", "ignore")
             if letter == LINE_ENDING:
                 if len(self.sentence)>0:
@@ -110,10 +110,11 @@ def read(s):
                 else:
                     # start of the message
                     start_of_sentence=''
-                    sentence = data.split('*',2)
-                    user=sentence[0]
-                    length = int(sentence[1])
-                    sentence=sentence[2]
+                    sentence = data.split('*',3)
+                    time_sent=sentence[0]
+                    user=sentence[1]
+                    length = int(sentence[2])
+                    sentence=sentence[3]
 
                 sentence=start_of_sentence+sentence
 
@@ -124,21 +125,22 @@ def read(s):
                 else:
                     while length==len(sentence) or length<len(sentence):
                         if length==len(sentence):
-                            read_queue.put(user+sentence)
+                            read_queue.put(time_sent+user+sentence)
                             sentence=''
                             if read_queue_buffer.empty() == False:
                                 read_queue_buffer.get()
                         else:
                             if length<(len(sentence)):
 
-                                read_queue.put(user + sentence[:length])
+                                read_queue.put(time_sent+ user + sentence[:length])
                                 sentence=sentence[length:]
                                 # so length will be taken when the loop comes again
-                                sentence = sentence.split('*', 2)
-                                if sentence[0]!='':
-                                    user = sentence[0]
-                                length = int(sentence[1])
-                                sentence = sentence[2]
+                                sentence = sentence.split('*', 3)
+                                if sentence[1]!='':
+                                    user = sentence[1]
+                                    time_sent=sentence[0]
+                                length = int(sentence[2])
+                                sentence = sentence[3]
                                 if length>len(sentence):
                                     read_queue_buffer.put(sentence)
 
